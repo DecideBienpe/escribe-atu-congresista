@@ -39,7 +39,7 @@ creamensaje <- function(nombre, usuario, dni, distrito, provincia, monto_maximo,
   text[3] <- stringr::str_c("Soy un(a) elector(a) del distrito", distrito, "-", provincia, ", ", "donde usted obtuvo la votación más alta ","(", 
                             monto_maximo, " votos preferenciales.)")
   text[4] <- ""
-  text[5] <- stringr::str_c("Dado que usted, en la práctica, es nuestro representante le pedimos que por favor en la votación sobre la vacancia presidencial, vote en contra y urja a su bancada a hacer lo mismo.")
+  text[5] <- stringr::str_c("Dado que usted, en la práctica, es nuestro representante, le pedimos que por favor en la votación sobre la vacancia presidencial, vote en contra y urja a su bancada a hacer lo mismo.")
   text[6] <- stringr::str_c("La vacancia presidencial, en medio de la pandemia Covid-19, es tanto una afrenta contra la institucionalidad democrática de nuestro país, como un un riesgo de salud pública. Esto no quita que se investigue al presidente al terminar su mandato.")
   text[7] <- stringr::str_c("Tengo confianza de que usted, como representante del pueblo peruano, escuchará este pedido y responderá favorablemente. De no ser así, tenga la seguridad de que en la próxima elección, el electorado peruano recordará que usted no escucha a sus electores, yo no votaré por usted y convenceré a amig@s y familiares que tampoco.")
   text[8] <- "Cordialmente"
@@ -58,10 +58,10 @@ presentacion<-function(usuario, distrito,provincia,monto_maximo){
 }
 parrafo1<-function(){
   p1=as.character(paste0("Dado que usted, en la práctica, es nuestro representante le pedimos que por favor en la votación sobre la vacancia presidencial, vote en contra y urja a su bancada a hacer lo mismo."," ",
-    "La vacancia presidencial, en medio de la pandemia Covid-19, es tanto una afrenta contra la institucionalidad democrática de nuestro país, como un un riesgo de salud pública. Esto no quita que se investigue y se sancione al presidente al terminar su mandato."))
+    "La vacancia presidencial, en medio de la pandemia Covid-19, es tanto una afrenta contra la institucionalidad democrática de nuestro país, como un un riesgo de salud pública. Esto no quita que se investigue al presidente al terminar su mandato."))
 }
 firma<-function(usuario,dni){
-  fi=paste(as.character(usuario), as.character(dni))
+  fi=paste(as.character(usuario),",DNI: " ,as.character(dni))
   return(fi)
 }
 creadfuser <- function(){
@@ -192,7 +192,7 @@ server <- function(input, output, session){
     p22
   })
   p3=shiny::eventReactive(input$OKbutton,{
-    p33="Atentamente"
+    p33="Atentamente,"
     p33
   })
   fir <- shiny::eventReactive(input$OKbutton,{
