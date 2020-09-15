@@ -1,0 +1,43 @@
+/* Estilos de CSS importados usando 'includeCSS' */
+
+hr {
+  border-color: blue;
+}
+
+/* 
+  TODO: la clase .row tiene atributos de margin que vienen
+  de Bootstrap grid.less. Por el momento los reseteamos aqui 
+  para poder tener un layout mas uniforme.
+*/
+.row {
+  margin: 0;
+}
+
+.titulo {
+  padding: 10px;
+}
+
+.sub-titulo {
+  padding-bottom: 10px;
+}
+
+.centrado {
+  margin: auto;
+  text-align: center;
+}
+
+.divisorOutput {
+  border-color: red;
+}
+
+.textoIntro {
+  color:#405d27;
+}
+
+.textoInstrucciones {
+  color:#ff7b25;
+}
+
+text {
+     font-family: "DejaVu Sans",arial,sans-serf;
+}
