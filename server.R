@@ -39,7 +39,7 @@ creamensaje <- function(nombre, usuario, dni, distrito, provincia, monto_maximo,
   text[3] <- stringr::str_c("Soy un(a) elector(a) del distrito", distrito, "-", provincia, ", ", "donde usted obtuvo la votación más alta ","(", 
                             monto_maximo, " votos preferenciales.)")
   text[4] <- ""
-  text[5] <- stringr::str_c("Dado que usted, en la práctica, es nuestro representante, le pedimos que por favor en la votación sobre la vacancia presidencial, vote en contra y urja a su bancada a hacer lo mismo.")
+  text[5] <- stringr::str_c("Dado que usted, en la práctica, es nuestro representante le pedimos que por favor en la votación sobre la vacancia presidencial, vote en contra y urja a su bancada a hacer lo mismo.")
   text[6] <- stringr::str_c("La vacancia presidencial, en medio de la pandemia Covid-19, es tanto una afrenta contra la institucionalidad democrática de nuestro país, como un un riesgo de salud pública. Esto no quita que se investigue al presidente al terminar su mandato.")
   text[7] <- stringr::str_c("Tengo confianza de que usted, como representante del pueblo peruano, escuchará este pedido y responderá favorablemente. De no ser así, tenga la seguridad de que en la próxima elección, el electorado peruano recordará que usted no escucha a sus electores, yo no votaré por usted y convenceré a amig@s y familiares que tampoco.")
   text[8] <- "Cordialmente"
@@ -53,56 +53,53 @@ encabezado<-function(nombre){
 }
 presentacion<-function(usuario, distrito,provincia,monto_maximo){
   presentacion=paste0("Soy un(a) elector(a) del distrito ", distrito, "-", provincia, ", ", "donde usted obtuvo la votación más alta ","(", 
-                            monto_maximo, " votos preferenciales.)")
+                      monto_maximo, " votos preferenciales.)")
   return (presentacion)
 }
 parrafo1<-function(){
   p1=as.character(paste0("Dado que usted, en la práctica, es nuestro representante le pedimos que por favor en la votación sobre la vacancia presidencial, vote en contra y urja a su bancada a hacer lo mismo."," ",
-    "La vacancia presidencial, en medio de la pandemia Covid-19, es tanto una afrenta contra la institucionalidad democrática de nuestro país, como un un riesgo de salud pública. Esto no quita que se investigue al presidente al terminar su mandato."))
+                         "La vacancia presidencial, en medio de la pandemia Covid-19, es tanto una afrenta contra la institucionalidad democrática de nuestro país, como un un riesgo de salud pública. Esto no quita que se investigue y se sancione al presidente al terminar su mandato."))
 }
 firma<-function(usuario,dni){
-  fi=paste(as.character(usuario),",DNI: " ,as.character(dni))
+  fi=paste(as.character(usuario), as.character(dni))
   return(fi)
 }
-creadfuser <- function(){
-  xdf <- data.frame(FechaHora = character(),
-                    Correo = character(),
-                    IndContesto = character(),
-                    IndVacanciaOK = character(),
-                    Departamento = character(),
-                    Provincia = character(),
-                    Distrito = character(),
-                    Congresistas = character())
-  return(xdf)
+
+tweet<-function(username,provincia,distrito,monto_maximo){
+  tweet_c=paste0(paste0("@",as.character(username)),
+                 " Le escribe un(a) elector(a) del distrito ",distrito,"-",provincia,", donde obtuvo la votación más alta","(",monto_maximo,")"," Dado que es nuestro representante le pedimos que en la votación de la vacancia vote en contra al ser una afrenta contra la institucionalidad democrática del país.")
+  return(tweet_c)
 }
 
-actualizaUsuarios <- function(txtcorreo, txtVacanciaOK, txtDepartamento, txtProvincia, txtDistrito, txtCongresista) {
-  if (!file.exists("usuarios.RDS")){
-    dfuser <- creadfuser()
-    saveRDS(dfuser, "usuarios.RDS")
-  }
-  dfuser <- readRDS(file = "usuarios.RDS")
+actualizaUsuarios <- function(txtdni, txtcorreo, txtVacanciaOK, txtDepartamento, txtProvincia, txtDistrito, txtCongresista) {
+  condb <- conectaDB()
+  message(get_nrow_tabla(condb))
   txtFechaHora <- Sys.time()
-  icontesto <- existeusuario(xcorreo = txtcorreo)
-  dfuser[nrow(dfuser)+1,] <- list(FechaHora = txtFechaHora,
-                                  Correo = txtcorreo,
-                                  IndContesto = icontesto,
-                                  IndVacanciaOK = txtVacanciaOK,
-                                  Departamento = txtDepartamento,
-                                  Provincia = txtProvincia,
-                                  Distrito = txtDistrito,
-                                  Congresistas = txtCongresista)
-  saveRDS(dfuser, "usuarios.RDS")
-  
+  icontesto <- existeusuario(xdni = txtdni, condb)
+  if (!icontesto){
+    dfuser <- creadfuser()
+    dfuser[1,] <- list(Fecha = txtFechaHora,
+                       Correo = txtcorreo,
+                       IndContesto = icontesto,
+                       IndVacanciaOK = txtVacanciaOK,
+                       Departamento = txtDepartamento,
+                       Provincia = txtProvincia,
+                       Distrito = txtDistrito,
+                       Congresistas = txtCongresista,
+                       DNI = txtdni)
+    RMariaDB::dbWriteTable(conn = condb, name = 'ec_decidebien', value = dfuser, append = TRUE)
+    message(get_nrow_tabla(condb))    
+    RMariaDB::dbDisconnect(conn = condb)
+    return(TRUE)
+  } else return(FALSE)
 }
 
 server <- function(input, output, session){
   VacanciaOK <- reactive(input$txtVacanciaOK)
   carta <- reactive(input$txtcarta)
-  #email<-reactive(input$txtcorreo)
+  
   shiny::observe({
     x <- input$txtDepartamento
-    #vprov <- unique(dfin[dfin$DEPARTAMENTO == x,]$PROVINCIA)
     shiny::updateSelectInput(session, "txtProvincia", label = "Provincia", choices = vprov(dfin, x), selected = head(vprov(dfin, x),1))
   })
   shiny::observe({
@@ -142,62 +139,77 @@ server <- function(input, output, session){
       }
     }
   })
-  shiny::observe(
+  shiny::observe({
     if (!is.null(carta())){
       message(paste0("carta = ", carta()))
       if (carta()=="Si"){
-        actualizaUsuarios(txtcorreo = input$txtcorreo,
-                          txtVacanciaOK = input$txtVacanciaOK, 
-                          txtDepartamento = input$txtDepartamento, 
-                          txtProvincia = input$txtProvincia, 
-                          txtDistrito = input$txtDistrito, 
-                          txtCongresista = input$txtCongresista)
-        output$mensajeDataSave <- shiny::renderText(
-          "<b>Se grabaron sus datos</b>"
-        )
+        actualizo <- actualizaUsuarios(txtcorreo = input$txtcorreo,
+                                       txtVacanciaOK = input$txtVacanciaOK, 
+                                       txtDepartamento = input$txtDepartamento, 
+                                       txtProvincia = input$txtProvincia, 
+                                       txtDistrito = input$txtDistrito, 
+                                       txtCongresista = input$txtCongresista,
+                                       txtdni = input$txtDNI)
+        if (actualizo) {
+          output$mensajeDataSave <- shiny::renderText(
+            "<b>Se grabaron sus datos</b>"
+          )  
+        } else{
+          output$mensajeDataSave <- shiny::renderText(
+            "<b>Usuario con respuesta previa</b>"
+          )  
+        }
+        
         
       } 
     }
-  )
-  # msg <- shiny::eventReactive(input$OKbutton, {
-  #   #output$pie <- getpie()
-  #   dfcong <- dfcong(x = input$txtDepartamento, y = input$txtProvincia, z = input$txtDistrito, c = input$txtCongresista)
-  #   mensaje <- creamensaje(nombre = unique(dfcong$CONGRESISTA),
-  #                          usuario = input$txtNombreUsuario,
-  #                          dni = input$txtDNI,
-  #                          distrito = unique(dfcong$DISTRITO), 
-  #                          provincia = unique(dfcong$PROVINCIA), 
-  #                          monto_maximo = unique(dfcong$VP), 
-  #                          #partido = unique(dfcong$ORGPOL)
-  #                          )
-  #   mensaje
-  # })
+  })
+  shiny::observe({
+    if (input$navbar == "stop"){
+      stopApp()
+    }
+  })
+  
   encabezado1<-shiny::eventReactive(input$OKbutton,{
     dfcong <- dfcong(x = input$txtDepartamento, y = input$txtProvincia, z = input$txtDistrito, c = input$txtCongresista)
     mensajeE <- encabezado(nombre = unique(dfcong$CONGRESISTA))
     mensajeE
   })
+  
   presentacion1<-shiny::eventReactive(input$OKbutton,{
     dfcong <- dfcong(x = input$txtDepartamento, y = input$txtProvincia, z = input$txtDistrito, c = input$txtCongresista)
     mensajeP <- presentacion(usuario = input$txNombreUsuario,distrito=input$txtDistrito, 
-      provincia=input$txtProvincia,monto_maximo=unique(dfcong$VP))
+                             provincia=input$txtProvincia,monto_maximo=unique(dfcong$VP))
     mensajeP
   })
+  
   p1=shiny::eventReactive(input$OKbutton,{
     p12=parrafo1()
     p12
   })
+  
   p2=shiny::eventReactive(input$OKbutton,{
     p22="Tengo confianza de que usted, como representante electo por mi distrito, escuchará este pedido y responderá favorablemente. De no ser así, tenga la seguridad de que en la próxima elección, el electorado peruano recordará que usted no escucha a sus electores, yo no votaré por usted y convenceré a amig@s y familiares que tampoco lo hagan."
     p22
   })
+  
   p3=shiny::eventReactive(input$OKbutton,{
-    p33="Atentamente,"
+    p33="Atentamente"
     p33
   })
+  
   fir <- shiny::eventReactive(input$OKbutton,{
     firma(usuario = input$txtNombreUsuario,
           dni = input$txtDNI)
+  })
+  
+  tweet_c <- shiny::eventReactive(input$OKbutton,{
+    dfcong <- dfcong(x = input$txtDepartamento, y = input$txtProvincia, z = input$txtDistrito, c = input$txtCongresista)
+    tweet(username = unique(dfcong$UTWEET),
+          provincia = input$txtProvincia,
+          distrito = input$txtDistrito,
+          monto_maximo = unique(dfcong$VP)
+    )
   })
   output$table1<-renderTable({
     dfin%>%filter(DEPARTAMENTO==input$txtDepartamento,
@@ -206,9 +218,7 @@ server <- function(input, output, session){
       dplyr::select(CONGRESISTA,EMAIL,VCENSURA)%>%
       unique()
   })
-  # output$mensaje <- shiny::renderText(
-  #   msg()
-  # )
+  
   output$encabezado2 <- shiny::renderText(
     encabezado1()
   )
@@ -227,15 +237,18 @@ server <- function(input, output, session){
   output$firma<-shiny::renderText(
     fir()
   )
-  #output$parrafo2<-shiny::renderText(
-  #  "La vacancia presidencial, en medio de la pandemia Covid-19, es tanto una afrenta contra la institucionalidad democrática de nuestro país, como un un riesgo de salud pública. Esto no quita que se investigue y se sancione al presidente al terminar su mandato."
-  #  )
-  #output$parrafo3<-shiny::renderText(
-  #  "La vacancia presidencial, en medio de la pandemia Covid-19, es tanto una afrenta contra la institucionalidad democrática de nuestro país, como un un riesgo de salud pública. Esto no quita que se investigue al presidente al terminar su mandato."
-  #  )
-  #output$parrafo4<-shiny::renderText(
-  #  "Tengo confianza de que usted, como representante del pueblo peruano, escuchará este pedido y responderá favorablemente. De no ser así, tenga la seguridad de que en la próxima elección, el electorado peruano recordará que usted no escucha a sus electores, yo no votaré por usted y convenceré a amig@s y familiares que tampoco."
-  #  )
+  output$table2<-renderTable({
+    dfin%>%filter(DEPARTAMENTO==input$txtDepartamento,
+                  PROVINCIA==input$txtProvincia,
+                  DISTRITO==input$txtDistrito)%>%
+      dplyr::select(CONGRESISTA,UTWEET,VCENSURA)%>%
+      unique()
+  })
+  
+  output$tweet<-shiny::renderText(
+    tweet_c()
+  )
+  
   t <- shiny::eventReactive(input$OKbutton, {
     unique(dfin[dfin$DEPARTAMENTO == input$txtDepartamento & 
                   dfin$PROVINCIA == input$txtProvincia & 
