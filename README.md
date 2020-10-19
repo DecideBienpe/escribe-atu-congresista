@@ -1,4 +1,4 @@
-# escribe_atu_congresista
+# escribe-atu-congresista
 
 Repositorio para el desarrollo de una aplicación (shiny) para conectar a los ciudadanos con sus representantes. 
 
