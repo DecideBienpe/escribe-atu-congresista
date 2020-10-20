@@ -65,9 +65,8 @@ firma<-function(usuario,dni){
   return(fi)
 }
 
-tweet<-function(username,provincia,distrito,monto_maximo){
-  tweet_c=paste0(paste0("@",as.character(username)),
-                 " Le escribe un(a) elector(a) del distrito ",distrito,"-",provincia,", donde obtuvo la votación más alta","(",monto_maximo,")"," Dado que es nuestro representante le pedimos que en la votación de la vacancia vote en contra al ser una afrenta contra la institucionalidad democrática del país.")
+tweet<-function(username,departamento,distrito,baseurl){
+  tweet_c=paste0("Hola @malena_maguina",distrito)
   return(tweet_c)
 }
 
@@ -206,9 +205,8 @@ server <- function(input, output, session){
   tweet_c <- shiny::eventReactive(input$OKbutton,{
     dfcong <- dfcong(x = input$txtDepartamento, y = input$txtProvincia, z = input$txtDistrito, c = input$txtCongresista)
     tweet(username = unique(dfcong$UTWEET),
-          provincia = input$txtProvincia,
-          distrito = input$txtDistrito,
-          monto_maximo = unique(dfcong$VP)
+          departamento = input$txtDepartamento,
+          distrito = input$txtDistrito
     )
   })
   output$table1<-renderTable({
