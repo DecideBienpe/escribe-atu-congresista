@@ -15,6 +15,12 @@ library(shinyjs)
 source("Functions.R")
 load("DataTotal.RData")
 dfin <- x
+urlBase="https://twitter.com/intent/tweet?text="
+#urlmensaje <-"Esta es una prueba"
+#urlcuenta <-"@malena_maguiña"
+#url<-paste0(urlBase,urlmensaje," ",urlcuenta)
+urltweet=paste0(urlBase,verbatimTextOutput("tweet"))
+
 
 gentabSalir <- function(){
   tp <- shiny::tabPanel(title = "Salir", value = "stop", icon = icon("circle-o-notch"))
@@ -73,7 +79,11 @@ navbarPage(
                  HTML('<hr style="color: blue;">'),
                  tableOutput("table2"),
                  shiny::h4("Mensaje: copia el texto y mándalo desde tu twitter"),
-                 shiny::htmlOutput("tweet")
+                 shiny::htmlOutput("tweet"),
+                 actionButton("twitter_share",
+                              label = "Share",
+                              icon = icon("twitter"),
+                              onclick = sprintf("window.open('%s')",urltweet))
         ),
         shiny::htmlOutput("mensajeDataSave")
       )
