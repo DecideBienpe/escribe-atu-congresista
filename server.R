@@ -85,6 +85,7 @@ server <- function(input, output, session){
   VacanciaOK <- reactive(input$txtVacanciaOK)
   carta <- reactive(input$txtcarta)
   seleccion <-reactive(input$txtCongresista)
+  URL <- reactiveVal("https://twitter.com/intent/tweet?text=Esto%20Prueba")
   shiny::observe({
     x <- input$txtDepartamento
     shiny::updateSelectInput(session, "txtProvincia", label = "Provincia", choices = vprov(dfin, x), selected = head(vprov(dfin, x),1))
@@ -243,6 +244,15 @@ server <- function(input, output, session){
   output$tweet<-shiny::renderText(
     tweet_c()
   )
+  observeEvent(input$OKbutton, {
+    newURL <- tweet_c()
+    URL(newURL)
+  })
+  #Tomado de https://stackoverflow.com/questions/62741646/how-to-update-url-in-shiny-r
+  output$link <- renderUI({
+    a("aqui", href = URL())
+  })
+  
   output$url<-renderUI(
     a(href=paste0(tweet_c),target="_blank"))
   t <- shiny::eventReactive(input$OKbutton, {
